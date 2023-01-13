@@ -34,7 +34,7 @@
           </Checkbox>
         </FormItem>
       </ACol>
-      <ACol :span="12">
+      <ACol v-if="loginPage.login_button_resetpwd" :span="loginPage.login_button_resetpwd.span">
         <FormItem :style="{ 'text-align': 'right' }">
           <!-- No logic, you need to deal with it yourself -->
           <Button type="link" size="small" @click="setLoginState(LoginStateEnum.RESET_PASSWORD)">
@@ -53,17 +53,30 @@
       </Button> -->
     </FormItem>
     <ARow class="enter-x">
-      <ACol :md="8" :xs="24">
+      <ACol
+        v-if="loginPage.login_button_mobile"
+        :md="loginPage.login_button_mobile.md"
+        :xs="loginPage.login_button_mobile.xs"
+      >
         <Button block @click="setLoginState(LoginStateEnum.MOBILE)">
           {{ t('sys.login.mobileSignInFormTitle') }}
         </Button>
       </ACol>
-      <ACol :md="8" :xs="24" class="!my-2 !md:my-0 xs:mx-0 md:mx-2">
+      <ACol
+        v-if="loginPage.login_button_qr"
+        :md="loginPage.login_button_qr.md"
+        :xs="loginPage.login_button_qr.xs"
+        class="!my-2 !md:my-0 xs:mx-0 md:mx-2"
+      >
         <Button block @click="setLoginState(LoginStateEnum.QR_CODE)">
           {{ t('sys.login.qrSignInFormTitle') }}
         </Button>
       </ACol>
-      <ACol :md="6" :xs="24">
+      <ACol
+        v-if="loginPage.login_button_reg"
+        :md="loginPage.login_button_reg.md"
+        :xs="loginPage.login_button_reg.xs"
+      >
         <Button block @click="setLoginState(LoginStateEnum.REGISTER)">
           {{ t('sys.login.registerButton') }}
         </Button>
@@ -119,8 +132,8 @@
   const rememberMe = ref(false);
 
   const formData = reactive({
-    account: 'vben',
-    password: '123456',
+    account: '',
+    password: '',
   });
 
   const { validForm } = useFormValid(formRef);
@@ -156,4 +169,18 @@
       loading.value = false;
     }
   }
+
+  defineProps({
+    loginPage: {
+      type: Object,
+      default() {
+        return {
+          login_button_resetpwd: false,
+          login_button_mobile: false,
+          login_button_qr: false,
+          login_button_reg: false,
+        };
+      },
+    },
+  });
 </script>

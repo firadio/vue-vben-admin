@@ -21,6 +21,8 @@ export interface TabItem {
   unreadlist?: ListItem[];
 }
 
+export const tabListData: TabItem[] = [];
+/*
 export const tabListData: TabItem[] = [
   {
     key: '1',
@@ -191,3 +193,4 @@ export const tabListData: TabItem[] = [
     ],
   },
 ];
+//*/

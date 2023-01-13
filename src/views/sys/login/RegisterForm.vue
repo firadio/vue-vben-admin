@@ -10,7 +10,7 @@
           :placeholder="t('sys.login.userName')"
         />
       </FormItem>
-      <FormItem name="mobile" class="enter-x">
+      <FormItem name="mobile" class="enter-x" v-if="loginPage.reg_formitem_mobile">
         <Input
           size="large"
           v-model:value="formData.mobile"
@@ -18,7 +18,7 @@
           class="fix-auto-fill"
         />
       </FormItem>
-      <FormItem name="sms" class="enter-x">
+      <FormItem name="sms" class="enter-x" v-if="loginPage.reg_formitem_sms">
         <CountdownInput
           size="large"
           class="fix-auto-fill"
@@ -42,10 +42,10 @@
         />
       </FormItem>
 
-      <FormItem class="enter-x" name="policy">
+      <FormItem class="enter-x" name="policy" v-if="loginPage.reg_formitem_policy">
         <!-- No logic, you need to deal with it yourself -->
         <Checkbox v-model:checked="formData.policy" size="small">
-          {{ t('sys.login.policy') }}
+          {{ loginPage.reg_formitem_policy.text }}
         </Checkbox>
       </FormItem>
 
@@ -73,6 +73,9 @@
   import { CountdownInput } from '/@/components/CountDown';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useLoginState, useFormRules, useFormValid, LoginStateEnum } from './useLogin';
+  import { useMessage } from '/@/hooks/web/useMessage';
+  import { useDesign } from '/@/hooks/web/useDesign';
+  import { useUserStore } from '/@/store/modules/user';
 
   const FormItem = Form.Item;
   const InputPassword = Input.Password;
@@ -95,10 +98,49 @@
   const { validForm } = useFormValid(formRef);
 
   const getShow = computed(() => unref(getLoginState) === LoginStateEnum.REGISTER);
+  const { notification, createErrorModal } = useMessage();
+  const { prefixCls } = useDesign('login');
+  const userStore = useUserStore();
 
   async function handleRegister() {
     const data = await validForm();
     if (!data) return;
     console.log(data);
+    try {
+      loading.value = true;
+      const userInfo = await userStore.register({
+        password: data.password,
+        username: data.account,
+        mode: 'none', //不要默认的错误提示
+      });
+      if (userInfo) {
+        notification.success({
+          message: t('sys.login.loginSuccessTitle'),
+          description: `${t('sys.login.loginSuccessDesc')}: ${userInfo.realName}`,
+          duration: 3,
+        });
+      }
+    } catch (error) {
+      createErrorModal({
+        title: t('sys.api.errorTip'),
+        content: (error as unknown as Error).message || t('sys.api.networkExceptionMsg'),
+        getContainer: () => document.body.querySelector(`.${prefixCls}`) || document.body,
+      });
+    } finally {
+      loading.value = false;
+    }
   }
+
+  defineProps({
+    loginPage: {
+      type: Object,
+      default() {
+        return {
+          reg_formitem_mobile: false,
+          reg_formitem_sms: false,
+          reg_formitem_policy: false,
+        };
+      },
+    },
+  });
 </script>

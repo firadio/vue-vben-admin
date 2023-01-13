@@ -19,6 +19,7 @@ import { joinTimestamp, formatRequestDate } from './helper';
 import { useUserStoreWithOut } from '/@/store/modules/user';
 import { AxiosRetry } from '/@/utils/http/axios/axiosRetry';
 import axios from 'axios';
+import { useAppStore } from '/@/store/modules/app';
 
 const globSetting = useGlobSetting();
 const urlPrefix = globSetting.urlPrefix;
@@ -169,6 +170,10 @@ const transform: AxiosTransform = {
    * @description: 响应拦截器处理
    */
   responseInterceptors: (res: AxiosResponse<any>) => {
+    if (res.data.hasOwnProperty('setProjectConfig')) {
+      const appStore = useAppStore();
+      appStore.setProjectConfig(res.data.setProjectConfig);
+    }
     return res;
   },
 
@@ -234,7 +239,7 @@ function createAxios(opt?: Partial<CreateAxiosOptions>) {
         timeout: 10 * 1000,
         // 基础接口地址
         // baseURL: globSetting.apiUrl,
-
+        withCredentials: true, // 确保后端API服务器能获取到Cookie
         headers: { 'Content-Type': ContentTypeEnum.JSON },
         // 如果是form-data格式
         // headers: { 'Content-Type': ContentTypeEnum.FORM_URLENCODED },
