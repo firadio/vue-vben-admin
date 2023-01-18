@@ -28,7 +28,7 @@
   import { BasicDrawer, useDrawerInner } from '/@/components/Drawer';
   import { BasicTree, TreeItem } from '/@/components/Tree';
 
-  import { getMenuList } from '/@/api/demo/system';
+  import { getMenuList, roleMgr } from '/@/api/demo/system';
 
   export default defineComponent({
     name: 'RoleDrawer',
@@ -36,6 +36,7 @@
     emits: ['success', 'register'],
     setup(_, { emit }) {
       const isUpdate = ref(true);
+      const rowId = ref(0);
       const treeData = ref<TreeItem[]>([]);
 
       const [registerForm, { resetFields, setFieldsValue, validate }] = useForm({
@@ -55,6 +56,7 @@
         isUpdate.value = !!data?.isUpdate;
 
         if (unref(isUpdate)) {
+          rowId.value = data.record.id;
           setFieldsValue({
             ...data.record,
           });
@@ -69,6 +71,11 @@
           setDrawerProps({ confirmLoading: true });
           // TODO custom api
           console.log(values);
+          if (unref(isUpdate)) {
+            await roleMgr().save(rowId.value, values);
+          } else {
+            await roleMgr().add(values);
+          }
           closeDrawer();
           emit('success');
         } finally {
