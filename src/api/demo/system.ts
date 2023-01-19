@@ -41,6 +41,8 @@ export const roleMgr = () => {
   // 角色管理的CRUD
   const urlpre = Api.RolePageList;
   return {
+    menu: (params?: MenuParams) =>
+      defHttp.get<MenuListGetResultModel>({ url: `${urlpre}/save/menu`, params }),
     add: (params: any) => defHttp.post({ url: `${urlpre}/add`, params }),
     list: (params?: RolePageParams) =>
       defHttp.get<RolePageListGetResultModel>({ url: urlpre, params }),

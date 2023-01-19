@@ -8,7 +8,7 @@ import { useMessage } from '/@/hooks/web/useMessage';
 export const columns: BasicColumn[] = [
   {
     title: '角色名称',
-    dataIndex: 'roleName',
+    dataIndex: 'title',
     width: 200,
   },
   {
@@ -62,7 +62,7 @@ export const columns: BasicColumn[] = [
 
 export const searchFormSchema: FormSchema[] = [
   {
-    field: 'roleName',
+    field: 'title',
     label: '角色名称',
     component: 'Input',
     colProps: { span: 8 },
@@ -83,7 +83,7 @@ export const searchFormSchema: FormSchema[] = [
 
 export const formSchema: FormSchema[] = [
   {
-    field: 'roleName',
+    field: 'title',
     label: '角色名称',
     required: true,
     component: 'Input',
