@@ -13,6 +13,9 @@
           v-model:value="model[field]"
           :treeData="treeData"
           :fieldNames="{ title: 'menuName', key: 'id' }"
+          checkStrictly
+          defaultExpandAll
+          v-if="treeData.length"
           checkable
           toolbar
           title="菜单分配"
@@ -71,6 +74,9 @@
           setDrawerProps({ confirmLoading: true });
           // TODO custom api
           console.log(values);
+          if (values.menu && values.menu.checked) {
+            values.menu = values.menu.checked;
+          }
           if (unref(isUpdate)) {
             await roleMgr().save(rowId.value, values);
           } else {
