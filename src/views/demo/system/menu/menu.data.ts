@@ -4,6 +4,19 @@ import { h } from 'vue';
 import { Tag } from 'ant-design-vue';
 import { Icon } from '/@/components/Icon';
 
+const status_option = [
+  { label: '默认', value: 0, color: 'blue' },
+  { label: '启用', value: 1, color: 'green' },
+  { label: '停用', value: 2, color: 'red' },
+];
+const fGetStatusRow = (value: number) => {
+  for (const mRow of status_option) {
+    if (mRow.value === value) {
+      return mRow;
+    }
+  }
+};
+
 export const columns: BasicColumn[] = [
   {
     title: '菜单名称',
@@ -44,11 +57,17 @@ export const columns: BasicColumn[] = [
     dataIndex: 'status',
     width: 50,
     customRender: ({ record }) => {
-      const status = record.status;
-      const enable = ~~status === 0;
-      const color = enable ? 'green' : 'red';
-      const text = enable ? '启用' : '停用';
-      return h(Tag, { color: color }, () => text);
+      const mRow = fGetStatusRow(record.status);
+      return h(Tag, { color: mRow?.color }, () => mRow?.label);
+    },
+  },
+  {
+    title: '缓存',
+    dataIndex: 'keepalive',
+    width: 50,
+    customRender: ({ record }) => {
+      const mRow = fGetStatusRow(record.keepalive);
+      return h(Tag, { color: mRow?.color }, () => mRow?.label);
     },
   },
   {
@@ -74,10 +93,7 @@ export const searchFormSchema: FormSchema[] = [
     label: '状态',
     component: 'Select',
     componentProps: {
-      options: [
-        { label: '启用', value: 1 },
-        { label: '停用', value: 2 },
-      ],
+      options: status_option,
     },
     colProps: { span: 8 },
   },
@@ -157,11 +173,7 @@ export const formSchema: FormSchema[] = [
     component: 'RadioButtonGroup',
     defaultValue: 0,
     componentProps: {
-      options: [
-        { label: '默认', value: 0 },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
+      options: status_option,
     },
   },
   {
@@ -170,11 +182,7 @@ export const formSchema: FormSchema[] = [
     component: 'RadioButtonGroup',
     defaultValue: 0,
     componentProps: {
-      options: [
-        { label: '默认', value: 0 },
-        { label: '启用', value: 1 },
-        { label: '禁用', value: 2 },
-      ],
+      options: status_option,
     },
     ifShow: ({ values }) => isMenu(values.type),
   },
