@@ -7,7 +7,7 @@ import { Icon } from '/@/components/Icon';
 export const columns: BasicColumn[] = [
   {
     title: '菜单名称',
-    dataIndex: 'menuName',
+    dataIndex: 'title',
     width: 200,
     align: 'left',
   },
@@ -58,7 +58,7 @@ const isButton = (type: string) => type === '2';
 
 export const searchFormSchema: FormSchema[] = [
   {
-    field: 'menuName',
+    field: 'title',
     label: '菜单名称',
     component: 'Input',
     colProps: { span: 8 },
@@ -93,7 +93,7 @@ export const formSchema: FormSchema[] = [
     colProps: { lg: 24, md: 24 },
   },
   {
-    field: 'menuName',
+    field: 'title',
     label: '菜单名称',
     component: 'Input',
     required: true,
@@ -105,7 +105,7 @@ export const formSchema: FormSchema[] = [
     component: 'TreeSelect',
     componentProps: {
       fieldNames: {
-        label: 'menuName',
+        label: 'title',
         key: 'id',
         value: 'id',
       },
