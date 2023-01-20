@@ -20,13 +20,19 @@ export const columns: BasicColumn[] = [
     },
   },
   {
-    title: '权限标识',
-    dataIndex: 'permission',
-    width: 180,
+    title: 'Name',
+    dataIndex: 'name',
+    width: 120,
+  },
+  {
+    title: '路径',
+    dataIndex: 'path',
+    width: 120,
   },
   {
     title: '组件',
     dataIndex: 'component',
+    width: 180,
   },
   {
     title: '排序',
@@ -36,7 +42,7 @@ export const columns: BasicColumn[] = [
   {
     title: '状态',
     dataIndex: 'status',
-    width: 80,
+    width: 50,
     customRender: ({ record }) => {
       const status = record.status;
       const enable = ~~status === 0;
@@ -48,13 +54,13 @@ export const columns: BasicColumn[] = [
   {
     title: '创建时间',
     dataIndex: 'createTime',
-    width: 180,
+    width: 150,
   },
 ];
 
-const isDir = (type: string) => type === '0';
-const isMenu = (type: string) => type === '1';
-const isButton = (type: string) => type === '2';
+const isDir = (type: number) => type === 0;
+const isMenu = (type: number) => type === 1;
+const isButton = (type: number) => type === 2;
 
 export const searchFormSchema: FormSchema[] = [
   {
@@ -69,8 +75,8 @@ export const searchFormSchema: FormSchema[] = [
     component: 'Select',
     componentProps: {
       options: [
-        { label: '启用', value: '0' },
-        { label: '停用', value: '1' },
+        { label: '启用', value: 1 },
+        { label: '停用', value: 2 },
       ],
     },
     colProps: { span: 8 },
@@ -85,12 +91,18 @@ export const formSchema: FormSchema[] = [
     defaultValue: '0',
     componentProps: {
       options: [
-        { label: '目录', value: '0' },
-        { label: '菜单', value: '1' },
-        { label: '按钮', value: '2' },
+        { label: '目录', value: 0 },
+        { label: '菜单', value: 1 },
+        { label: '按钮', value: 2 },
       ],
     },
     colProps: { lg: 24, md: 24 },
+  },
+  {
+    field: 'name',
+    label: 'Name',
+    component: 'Input',
+    required: true,
   },
   {
     field: 'title',
@@ -98,7 +110,6 @@ export const formSchema: FormSchema[] = [
     component: 'Input',
     required: true,
   },
-
   {
     field: 'parentMenu',
     label: '上级菜单',
@@ -128,7 +139,7 @@ export const formSchema: FormSchema[] = [
   },
 
   {
-    field: 'routePath',
+    field: 'path',
     label: '路由地址',
     component: 'Input',
     required: true,
@@ -141,62 +152,36 @@ export const formSchema: FormSchema[] = [
     ifShow: ({ values }) => isMenu(values.type),
   },
   {
-    field: 'permission',
-    label: '权限标识',
-    component: 'Input',
-    ifShow: ({ values }) => !isDir(values.type),
-  },
-  {
     field: 'status',
     label: '状态',
     component: 'RadioButtonGroup',
-    defaultValue: '0',
+    defaultValue: 0,
     componentProps: {
       options: [
-        { label: '启用', value: '0' },
-        { label: '禁用', value: '1' },
+        { label: '默认', value: 0 },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 2 },
       ],
     },
   },
-  {
-    field: 'isExt',
-    label: '是否外链',
-    component: 'RadioButtonGroup',
-    defaultValue: '0',
-    componentProps: {
-      options: [
-        { label: '否', value: '0' },
-        { label: '是', value: '1' },
-      ],
-    },
-    ifShow: ({ values }) => !isButton(values.type),
-  },
-
   {
     field: 'keepalive',
-    label: '是否缓存',
+    label: '缓存',
     component: 'RadioButtonGroup',
-    defaultValue: '0',
+    defaultValue: 0,
     componentProps: {
       options: [
-        { label: '否', value: '0' },
-        { label: '是', value: '1' },
+        { label: '默认', value: 0 },
+        { label: '启用', value: 1 },
+        { label: '禁用', value: 2 },
       ],
     },
     ifShow: ({ values }) => isMenu(values.type),
   },
-
   {
-    field: 'show',
-    label: '是否显示',
-    component: 'RadioButtonGroup',
-    defaultValue: '0',
-    componentProps: {
-      options: [
-        { label: '是', value: '0' },
-        { label: '否', value: '1' },
-      ],
-    },
-    ifShow: ({ values }) => !isButton(values.type),
+    field: 'redirect',
+    label: '重定向',
+    component: 'Input',
+    ifShow: ({ values }) => isDir(values.type),
   },
 ];
