@@ -41,7 +41,7 @@
   import { defineComponent, reactive } from 'vue';
 
   import { BasicTable, useTable, TableAction } from '/@/components/Table';
-  import { getAccountList } from '/@/api/demo/system';
+  import { userMgr } from '/@/api/demo/system';
   import { PageWrapper } from '/@/components/Page';
   import DeptTree from './DeptTree.vue';
 
@@ -60,7 +60,7 @@
       const searchInfo = reactive<Recordable>({});
       const [registerTable, { reload, updateTableDataRecord }] = useTable({
         title: '账号列表',
-        api: getAccountList,
+        api: userMgr().list,
         rowKey: 'id',
         columns,
         formConfig: {
@@ -97,8 +97,10 @@
         });
       }
 
-      function handleDelete(record: Recordable) {
+      async function handleDelete(record: Recordable) {
         console.log(record);
+        await userMgr().del(record.uid);
+        reload();
       }
 
       function handleSuccess({ isUpdate, values }) {
