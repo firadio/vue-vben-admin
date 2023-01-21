@@ -3,10 +3,23 @@ import { FormSchema } from '/@/components/Table';
 import { h } from 'vue';
 import { Tag } from 'ant-design-vue';
 
+const status_option = [
+  { label: '默认', value: 0, color: 'blue' },
+  { label: '启用', value: 1, color: 'green' },
+  { label: '停用', value: 2, color: 'red' },
+];
+const fGetStatusRow = (value: number) => {
+  for (const mRow of status_option) {
+    if (mRow.value === value) {
+      return mRow;
+    }
+  }
+};
+
 export const columns: BasicColumn[] = [
   {
     title: '部门名称',
-    dataIndex: 'deptName',
+    dataIndex: 'name',
     width: 160,
     align: 'left',
   },
@@ -18,13 +31,10 @@ export const columns: BasicColumn[] = [
   {
     title: '状态',
     dataIndex: 'status',
-    width: 80,
+    width: 50,
     customRender: ({ record }) => {
-      const status = record.status;
-      const enable = ~~status === 0;
-      const color = enable ? 'green' : 'red';
-      const text = enable ? '启用' : '停用';
-      return h(Tag, { color: color }, () => text);
+      const mRow = fGetStatusRow(record.status);
+      return h(Tag, { color: mRow?.color }, () => mRow?.label);
     },
   },
   {
@@ -40,7 +50,7 @@ export const columns: BasicColumn[] = [
 
 export const searchFormSchema: FormSchema[] = [
   {
-    field: 'deptName',
+    field: 'name',
     label: '部门名称',
     component: 'Input',
     colProps: { span: 8 },
@@ -50,10 +60,7 @@ export const searchFormSchema: FormSchema[] = [
     label: '状态',
     component: 'Select',
     componentProps: {
-      options: [
-        { label: '启用', value: '0' },
-        { label: '停用', value: '1' },
-      ],
+      options: status_option,
     },
     colProps: { span: 8 },
   },
@@ -61,25 +68,23 @@ export const searchFormSchema: FormSchema[] = [
 
 export const formSchema: FormSchema[] = [
   {
-    field: 'deptName',
+    field: 'name',
     label: '部门名称',
     component: 'Input',
     required: true,
   },
   {
-    field: 'parentDept',
+    field: 'parent_id',
     label: '上级部门',
     component: 'TreeSelect',
-
     componentProps: {
       fieldNames: {
-        label: 'deptName',
+        label: 'name',
         key: 'id',
         value: 'id',
       },
       getPopupContainer: () => document.body,
     },
-    required: true,
   },
   {
     field: 'orderNo',
@@ -93,10 +98,7 @@ export const formSchema: FormSchema[] = [
     component: 'RadioButtonGroup',
     defaultValue: '0',
     componentProps: {
-      options: [
-        { label: '启用', value: '0' },
-        { label: '停用', value: '1' },
-      ],
+      options: status_option,
     },
     required: true,
   },

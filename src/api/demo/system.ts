@@ -41,11 +41,8 @@ export const menuMgr = () => {
   // 菜单管理的CRUD
   const urlpre = Api.MenuList;
   return {
-    menu: (params?: MenuParams) =>
-      defHttp.get<MenuListGetResultModel>({ url: `${urlpre}/save/menu`, params }),
     add: (params: any) => defHttp.post({ url: `${urlpre}/add`, params }),
-    list: (params?: RolePageParams) =>
-      defHttp.get<RolePageListGetResultModel>({ url: urlpre, params }),
+    list: (params?: MenuParams) => defHttp.get<MenuListGetResultModel>({ url: urlpre, params }),
     save: (id: number, params: any) => defHttp.post({ url: `${urlpre}/${id}/save`, params }),
     del: (id: number) => defHttp.post({ url: `${urlpre}/${id}/del` }),
   };
@@ -60,6 +57,17 @@ export const roleMgr = () => {
     add: (params: any) => defHttp.post({ url: `${urlpre}/add`, params }),
     list: (params?: RolePageParams) =>
       defHttp.get<RolePageListGetResultModel>({ url: urlpre, params }),
+    save: (id: number, params: any) => defHttp.post({ url: `${urlpre}/${id}/save`, params }),
+    del: (id: number) => defHttp.post({ url: `${urlpre}/${id}/del` }),
+  };
+};
+
+export const deptMgr = () => {
+  // 部门管理的CRUD
+  const urlpre = Api.DeptList;
+  return {
+    add: (params: any) => defHttp.post({ url: `${urlpre}/add`, params }),
+    list: (params?: DeptListItem) => defHttp.get<DeptListGetResultModel>({ url: urlpre, params }),
     save: (id: number, params: any) => defHttp.post({ url: `${urlpre}/${id}/save`, params }),
     del: (id: number) => defHttp.post({ url: `${urlpre}/${id}/del` }),
   };
