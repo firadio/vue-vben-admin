@@ -39,6 +39,7 @@
   import MenuDrawer from './MenuDrawer.vue';
 
   import { columns, searchFormSchema } from './menu.data';
+  import { menuMgr } from '/@/api/demo/system';
 
   export default defineComponent({
     name: 'MenuManagement',
@@ -82,9 +83,10 @@
           isUpdate: true,
         });
       }
-
-      function handleDelete(record: Recordable) {
+      async function handleDelete(record: Recordable) {
         console.log(record);
+        await menuMgr().del(record.id);
+        handleSuccess();
       }
 
       function handleSuccess() {

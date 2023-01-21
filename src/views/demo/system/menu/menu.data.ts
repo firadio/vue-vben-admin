@@ -127,7 +127,7 @@ export const formSchema: FormSchema[] = [
     required: true,
   },
   {
-    field: 'parentMenu',
+    field: 'parent_id',
     label: '上级菜单',
     component: 'TreeSelect',
     componentProps: {

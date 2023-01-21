@@ -15,7 +15,7 @@
           :fieldNames="{ title: 'title', key: 'id' }"
           checkStrictly
           defaultExpandAll
-          v-if="treeData.length"
+          v-if="model[field] && treeData.length"
           checkable
           toolbar
           title="菜单分配"
