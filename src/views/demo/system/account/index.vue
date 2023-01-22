@@ -61,7 +61,7 @@
       const [registerTable, { reload, updateTableDataRecord }] = useTable({
         title: '账号列表',
         api: userMgr().list,
-        rowKey: 'id',
+        rowKey: 'uid',
         columns,
         formConfig: {
           labelWidth: 120,
