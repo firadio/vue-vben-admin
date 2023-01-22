@@ -85,3 +85,9 @@ export const deptMgr = () => {
     del: (id: number) => defHttp.post({ url: `${urlpre}/${id}/del` }),
   };
 };
+
+export const isAccountExist = (account: string) =>
+  defHttp.post(
+    { url: `${Api.AccountList}/isAccountExist`, params: { account } },
+    { errorMessageMode: 'none' },
+  );
