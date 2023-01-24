@@ -1,0 +1,183 @@
+<template>
+  <div class="p-4">
+    <BasicTable
+      @register="registerTable"
+      @edit-end="handleEditEnd"
+      @edit-cancel="handleEditCancel"
+      :beforeEditSubmit="beforeEditSubmit"
+    >
+      <template #tableTitle>
+        <TableTitle :helpMessage="useTableConfig.helpMessage" :title="useTableConfig.title" />
+      </template>
+      <template #toolbar>
+        <a-button
+          v-for="item of useTableConfig.toolbars"
+          :key="item.name"
+          type="primary"
+          @click="item.onclick"
+          >{{ item.title }}</a-button
+        >
+      </template>
+    </BasicTable>
+  </div>
+</template>
+<script lang="ts">
+  // 1: 导入vue内置组件
+  import { defineComponent, h, ref } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { Progress } from 'ant-design-vue';
+
+  // 2: 导入Vben组件
+  import { BasicTable, useTable, BasicColumn } from '/@/components/Table';
+  import TableTitle from '/@/components/Table/src/components/TableTitle.vue';
+
+  // 3: 导入Vben其他
+  import { defHttp } from '/@/utils/http/axios';
+  import { useMessage } from '/@/hooks/web/useMessage';
+
+  // 4: 自定义类型
+  interface TableConfigToolbar {
+    name: string;
+    title: string;
+    onclick: Function;
+  }
+
+  // 5: 自定义API
+  const fTableMgrApi = (urlpre: string) => {
+    // API-CRUD
+    const url = '/panel' + urlpre;
+    return {
+      info: () => defHttp.get({ url, params: { a: 'info' } }),
+      add: (params: any) => defHttp.post({ url: `${url}/add`, params }),
+      list: (params?: any) => defHttp.get({ url, params }),
+      save: (id: number, params: any) => defHttp.post({ url: `${url}/${id}/save`, params }),
+      del: (id: number) => defHttp.post({ url: `${url}/${id}/del` }),
+    };
+  };
+
+  // 6: 最后导出组件
+  export default defineComponent({
+    components: { BasicTable, TableTitle },
+    setup() {
+      // 1: const
+      const toolbars: TableConfigToolbar[] = [];
+      const useTableConfig = {
+        toolbars,
+        title: '',
+        helpMessage: '',
+      };
+      const { currentRoute } = useRouter();
+      const path = currentRoute.value.path;
+      //console.log(path);
+      const { createMessage } = useMessage();
+
+      const [registerTable, { setColumns }] = useTable({
+        title: '可编辑单元格示例',
+        api: fTableMgrApi(path).list,
+        columns: [],
+        showIndexColumn: false,
+        bordered: true,
+      });
+
+      function handleEditEnd({ record, index, key, value }: Recordable) {
+        console.log(record, index, key, value);
+        return false;
+      }
+
+      // 模拟将指定数据保存
+      function feakSave({ value, key, id }) {
+        createMessage.loading({
+          content: `正在模拟保存${key}`,
+          key: '_save_fake_data',
+          duration: 0,
+        });
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            if (value === '') {
+              createMessage.error({
+                content: '保存失败：不能为空',
+                key: '_save_fake_data',
+                duration: 2,
+              });
+              resolve(false);
+            } else {
+              createMessage.success({
+                content: `记录${id}的${key}已保存`,
+                key: '_save_fake_data',
+                duration: 2,
+              });
+              resolve(true);
+            }
+          }, 2000);
+        });
+      }
+
+      async function beforeEditSubmit({ record, index, key, value }) {
+        console.log('单元格数据正在准备提交', { record, index, key, value });
+        return await feakSave({ id: record.id, key, value });
+      }
+
+      function handleEditCancel() {
+        console.log('cancel');
+      }
+
+      // 加载表格信息
+      const fLoadInfo = async () => {
+        createMessage.loading({
+          content: `正在加载Info`,
+          key: 'fLoadInfo',
+          duration: 0,
+        });
+        const info = await fTableMgrApi(path).info();
+        setColumns(
+          (() => {
+            const aRet: BasicColumn[] = [];
+            for (const column of info.columns) {
+              if (column.editComponent === 'InputNumber') {
+                if (0) {
+                  //根据输入的数字显示进度条
+                  column.editRender = ({ text }) => {
+                    return h(Progress, { percent: Number(text) });
+                  };
+                }
+              }
+              aRet.push(column);
+            }
+            return aRet;
+          })(),
+        );
+        useTableConfig.title = info.title;
+        useTableConfig.helpMessage = info.helpMessage;
+        useTableConfig.toolbars = (() => {
+          const aRet: any = [];
+          for (const toolbar of info.toolbars) {
+            if (toolbar.onclick) {
+              const onclick = toolbar.onclick;
+              toolbar.onclick = () => {
+                if (typeof onclick === 'string') {
+                  eval(onclick);
+                }
+              };
+            }
+            aRet.push(toolbar);
+          }
+          return aRet;
+        })();
+        createMessage.success({
+          content: `Info加载完成`,
+          key: 'fLoadInfo',
+          duration: 0.1,
+        });
+      };
+      fLoadInfo();
+
+      return {
+        registerTable,
+        handleEditEnd,
+        handleEditCancel,
+        beforeEditSubmit,
+        useTableConfig: ref(useTableConfig),
+      };
+    },
+  });
+</script>
