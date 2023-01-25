@@ -12,13 +12,14 @@
       <template #toolbar>
         <a-button
           v-for="item of useTableConfig.toolbars"
-          :key="item.name"
+          :key="item.title"
           type="primary"
-          @click="item.onclick"
+          @click="item.click"
           >{{ item.title }}</a-button
         >
       </template>
     </BasicTable>
+    <XixiModal @register="registerModal" @success="handleSuccess" />
   </div>
 </template>
 <script lang="ts">
@@ -30,6 +31,8 @@
   // 2: 导入Vben组件
   import { BasicTable, useTable, BasicColumn } from '/@/components/Table';
   import TableTitle from '/@/components/Table/src/components/TableTitle.vue';
+  import { useModal } from '/@/components/Modal';
+  import XixiModal from './XixiModal.vue';
 
   // 3: 导入Vben其他
   import { defHttp } from '/@/utils/http/axios';
@@ -37,9 +40,8 @@
 
   // 4: 自定义类型
   interface TableConfigToolbar {
-    name: string;
     title: string;
-    onclick: Function;
+    click: Function;
   }
 
   // 5: 自定义API
@@ -57,7 +59,7 @@
 
   // 6: 最后导出组件
   export default defineComponent({
-    components: { BasicTable, TableTitle },
+    components: { BasicTable, TableTitle, XixiModal },
     setup() {
       // 1: const
       const toolbars: TableConfigToolbar[] = [];
@@ -71,7 +73,8 @@
       //console.log(path);
       const { createMessage } = useMessage();
 
-      const [registerTable, { setColumns }] = useTable({
+      const [registerModal, { openModal }] = useModal();
+      const [registerTable, { reload, setColumns }] = useTable({
         title: '可编辑单元格示例',
         api: fTableMgrApi(path).list,
         columns: [],
@@ -121,6 +124,16 @@
         console.log('cancel');
       }
 
+      function clickToolbar(data: any) {
+        if (data.click === 'fLoadInfo') {
+          fLoadInfo();
+          return;
+        }
+        if (data.click === 'openModal') {
+          openModal(true, data);
+          return;
+        }
+      }
       // 加载表格信息
       const fLoadInfo = async () => {
         createMessage.loading({
@@ -149,17 +162,14 @@
         useTableConfig.title = info.title;
         useTableConfig.helpMessage = info.helpMessage;
         useTableConfig.toolbars = (() => {
-          const aRet: any = [];
+          const aRet: any[] = [];
           for (const toolbar of info.toolbars) {
-            if (toolbar.onclick) {
-              const onclick = toolbar.onclick;
-              toolbar.onclick = () => {
-                if (typeof onclick === 'string') {
-                  eval(onclick);
-                }
-              };
-            }
-            aRet.push(toolbar);
+            aRet.push({
+              title: toolbar.title,
+              click: () => {
+                clickToolbar.call(this, toolbar);
+              },
+            });
           }
           return aRet;
         })();
@@ -171,12 +181,18 @@
       };
       fLoadInfo();
 
+      function handleSuccess() {
+        reload();
+      }
+
       return {
+        registerModal,
         registerTable,
         handleEditEnd,
         handleEditCancel,
         beforeEditSubmit,
         useTableConfig: ref(useTableConfig),
+        handleSuccess,
       };
     },
   });
