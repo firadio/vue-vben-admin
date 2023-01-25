@@ -85,7 +85,13 @@
           setModalProps({ confirmLoading: true });
           // TODO custom api
           console.log('values', values);
-          await defHttp.post({ url: `/panel${route_path}/${modalInfo.action}`, params: values });
+          await defHttp.post(
+            {
+              url: `/panel${route_path}/${modalInfo.action}`,
+              params: values,
+            },
+            { successMessageMode: 'modal' },
+          );
           closeModal();
           emit('success');
         } finally {

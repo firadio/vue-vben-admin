@@ -5,6 +5,7 @@
       @edit-end="handleEditEnd"
       @edit-cancel="handleEditCancel"
       :beforeEditSubmit="beforeEditSubmit"
+      :searchInfo="useTableConfig.searchInfo"
     >
       <template #tableTitle>
         <TableTitle :helpMessage="useTableConfig.helpMessage" :title="useTableConfig.title" />
@@ -24,12 +25,12 @@
 </template>
 <script lang="ts">
   // 1: 导入vue内置组件
-  import { defineComponent, h, ref } from 'vue';
+  import { defineComponent, h, ref, reactive } from 'vue';
   import { useRouter } from 'vue-router';
-  import { Progress } from 'ant-design-vue';
+  import { Progress, Tag } from 'ant-design-vue';
 
   // 2: 导入Vben组件
-  import { BasicTable, useTable, BasicColumn } from '/@/components/Table';
+  import { BasicTable, useTable, BasicColumn, BasicTableProps } from '/@/components/Table';
   import TableTitle from '/@/components/Table/src/components/TableTitle.vue';
   import { useModal } from '/@/components/Modal';
   import XixiModal from './XixiModal.vue';
@@ -67,6 +68,7 @@
         toolbars,
         title: '',
         helpMessage: '',
+        searchInfo: reactive<Recordable>({}),
       };
       const { currentRoute } = useRouter();
       const path = currentRoute.value.path;
@@ -74,7 +76,7 @@
       const { createMessage } = useMessage();
 
       const [registerModal, { openModal }] = useModal();
-      const [registerTable, { reload, setColumns }] = useTable({
+      const [registerTable, { reload, setColumns, setProps }] = useTable({
         title: '可编辑单元格示例',
         api: fTableMgrApi(path).list,
         columns: [],
@@ -134,6 +136,14 @@
           return;
         }
       }
+      const checkRecordByWhere = (record: any, where: any) => {
+        for (const k in where) {
+          if (record[k] !== where[k]) {
+            return false;
+          }
+        }
+        return true;
+      };
       // 加载表格信息
       const fLoadInfo = async () => {
         createMessage.loading({
@@ -142,6 +152,17 @@
           duration: 0,
         });
         const info = await fTableMgrApi(path).info();
+        const props: Partial<BasicTableProps> = {};
+        props.title = info.title;
+        if (info.searches) {
+          props.formConfig = {
+            labelWidth: 120,
+            schemas: info.searches,
+            autoSubmitOnEnter: true,
+          };
+          props.useSearchForm = true;
+        }
+        setProps(props);
         setColumns(
           (() => {
             const aRet: BasicColumn[] = [];
@@ -153,6 +174,18 @@
                     return h(Progress, { percent: Number(text) });
                   };
                 }
+              }
+              if (column.customRender) {
+                const crlist = column.customRender;
+                column.customRender = ({ record }) => {
+                  for (const cr of crlist) {
+                    if (checkRecordByWhere(record, cr.where)) {
+                      const color = cr.color;
+                      const label = record[column.dataIndex];
+                      return h(Tag, { color }, () => label);
+                    }
+                  }
+                };
               }
               aRet.push(column);
             }
