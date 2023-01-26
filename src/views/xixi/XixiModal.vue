@@ -5,9 +5,7 @@
     :title="refModalInfo.title"
     @ok="handleSubmit"
   >
-    <div class="pt-3px pr-3px">
-      <BasicForm @register="registerForm" />
-    </div>
+    <BasicForm @register="registerForm" />
   </BasicModal>
 </template>
 <script lang="ts">

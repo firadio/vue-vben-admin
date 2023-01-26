@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4">
+  <div>
     <BasicTable
       @register="registerTable"
       @edit-end="handleEditEnd"
@@ -77,11 +77,10 @@
 
       const [registerModal, { openModal }] = useModal();
       const [registerTable, { reload, setColumns, setProps }] = useTable({
-        title: '可编辑单元格示例',
         api: fTableMgrApi(path).list,
-        columns: [],
-        showIndexColumn: false,
-        bordered: true,
+        bordered: true, // 是否显示边框
+        showIndexColumn: true, // 是否显示【序号】
+        showTableSetting: true, // 是否显示表的配置功能
       });
 
       function handleEditEnd({ record, index, key, value }: Recordable) {
