@@ -78,9 +78,6 @@
       const [registerModal, { openModal }] = useModal();
       const [registerTable, { reload, setColumns, setProps }] = useTable({
         api: fTableMgrApi(path).list,
-        bordered: true, // 是否显示边框
-        showIndexColumn: true, // 是否显示【序号】
-        showTableSetting: true, // 是否显示表的配置功能
       });
 
       function handleEditEnd({ record, index, key, value }: Recordable) {
@@ -152,7 +149,9 @@
         });
         const info = await fTableMgrApi(path).info();
         const props: Partial<BasicTableProps> = {};
-        props.title = info.title;
+        for (const k in info.basic_table_props) {
+          props[k] = info.basic_table_props[k];
+        }
         if (info.searches) {
           props.formConfig = {
             labelWidth: 120,
