@@ -76,9 +76,7 @@
       const { createMessage } = useMessage();
 
       const [registerModal, { openModal }] = useModal();
-      const [registerTable, { reload, setColumns, setProps }] = useTable({
-        api: fTableMgrApi(path).list,
-      });
+      const [registerTable, { reload, setColumns, setProps }] = useTable();
 
       function handleEditEnd({ record, index, key, value }: Recordable) {
         console.log(record, index, key, value);
@@ -149,6 +147,7 @@
         });
         const info = await fTableMgrApi(path).info();
         const props: Partial<BasicTableProps> = {};
+        props.api = fTableMgrApi(path).list;
         for (const k in info.basic_table_props) {
           props[k] = info.basic_table_props[k];
         }
@@ -209,6 +208,7 @@
           key: 'fLoadInfo',
           duration: 0.1,
         });
+        reload();
       };
       fLoadInfo();
 
