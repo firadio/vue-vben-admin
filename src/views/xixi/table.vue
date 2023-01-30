@@ -79,7 +79,13 @@
       const { createMessage } = useMessage();
 
       const [registerModal, { openModal: openModal_Import }] = useModal();
-      const [registerTable, { reload, setColumns, setProps }] = useTable();
+      const [registerTable, { reload, getColumns, setColumns, setProps }] = useTable({
+        handleSearchInfoFn(info) {
+          console.log('handleSearchInfoFn', info);
+          tplConf.LastSearchInfo = info;
+          return info;
+        },
+      });
       const [tplConf_ExpExcelModal_register, { openModal: openModal_ExpExcel }] = useModal();
 
       function handleEditEnd({ record, index, key, value }: Recordable) {
@@ -160,14 +166,18 @@
           props[k] = info.basic_table_props[k];
         }
         if (info.searches) {
-          props.formConfig = {
-            labelWidth: 120,
-            schemas: info.searches,
-            autoSubmitOnEnter: true,
-          };
+          if (!props.formConfig) {
+            // 提供默认的搜索设置
+            props.formConfig = {
+              labelWidth: 120,
+              autoSubmitOnEnter: true,
+            };
+          }
+          props.formConfig.schemas = info.searches;
           props.useSearchForm = true;
         }
         const fGetColumns = (columns: any[]) => {
+          // 从接口中返回的“列配置”中，取得列的设置
           const aRet: BasicColumn[] = [];
           for (const column of columns) {
             if (column.editComponent === 'InputNumber') {
@@ -231,20 +241,74 @@
         reload();
       }
 
+      const fGetVisibleColumns = () => {
+        // 取得可见的列名
+        const columns = getColumns();
+        const ret: BasicColumn[] = [];
+        for (const column of columns) {
+          if (column.hasOwnProperty('defaultHidden')) {
+            if (column.defaultHidden) {
+              continue;
+            }
+          }
+          if (column.hasOwnProperty('flag')) {
+            if (column.flag === 'ACTION') {
+              continue;
+            }
+          }
+          if (!column.hasOwnProperty('dataIndex')) {
+            continue;
+          }
+          ret.push(column);
+        }
+        return ret;
+      };
+
+      const fGetItemsByColumns = (items: any[], aField: string[]) => {
+        const aRet: any[] = [];
+        for (const item of items) {
+          const mRow = {};
+          for (const sField of aField) {
+            if (item.hasOwnProperty(sField)) {
+              mRow[sField] = item[sField];
+            }
+          }
+          aRet.push(mRow);
+        }
+        return aRet;
+      };
+
       const tplConf = {
+        LastSearchInfo: {},
         BasicTable: { searchInfo: reactive<Recordable>({}) },
         TableTitle: { title: '', helpMessage: '' },
         toolbars: toolbars,
         ExpExcelModal: {
           register: tplConf_ExpExcelModal_register,
-          success: function defaultHeader({ filename, bookType }: ExportModalResult) {
+          success: async function defaultHeader({ filename, bookType }: ExportModalResult) {
             // 默认Object.keys(data[0])作为header
-            const data = [];
+            const mParam = deepMerge(tplConf.LastSearchInfo, { page: 1, pageSize: 10000 });
+            const mResult = await fTableMgrApi(path).list(mParam);
+            const columns = fGetVisibleColumns();
+            const mHeader = {};
+            const aHeader: string[] = [];
+            for (const column of columns) {
+              if (column.dataIndex) {
+                const s = column.dataIndex.toString();
+                mHeader[s] = column.title;
+                aHeader.push(s);
+              }
+            }
             jsonToSheetXlsx({
-              data,
+              data: fGetItemsByColumns(mResult.items, aHeader),
+              header: mHeader,
               filename,
               write2excelOpts: {
                 bookType,
+              },
+              json2sheetOpts: {
+                // 指定顺序
+                header: aHeader,
               },
             });
           },
