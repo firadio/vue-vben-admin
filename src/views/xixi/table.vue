@@ -5,14 +5,17 @@
       @edit-end="handleEditEnd"
       @edit-cancel="handleEditCancel"
       :beforeEditSubmit="beforeEditSubmit"
-      :searchInfo="useTableConfig.searchInfo"
+      :searchInfo="tplConf.BasicTable.searchInfo"
     >
       <template #tableTitle>
-        <TableTitle :helpMessage="useTableConfig.helpMessage" :title="useTableConfig.title" />
+        <TableTitle
+          :helpMessage="tplConf.TableTitle.helpMessage"
+          :title="tplConf.TableTitle.title"
+        />
       </template>
       <template #toolbar>
         <a-button
-          v-for="item of useTableConfig.toolbars"
+          v-for="item of tplConf.toolbars"
           :key="item.title"
           type="primary"
           @click="item.click"
@@ -21,6 +24,10 @@
       </template>
     </BasicTable>
     <XixiModal @register="registerModal" @success="handleSuccess" />
+    <ExpExcelModal
+      @register="tplConf.ExpExcelModal.register"
+      @success="tplConf.ExpExcelModal.success"
+    />
   </div>
 </template>
 <script lang="ts">
@@ -34,10 +41,12 @@
   import TableTitle from '/@/components/Table/src/components/TableTitle.vue';
   import { useModal } from '/@/components/Modal';
   import XixiModal from './XixiModal.vue';
+  import { jsonToSheetXlsx, ExpExcelModal, ExportModalResult } from '/@/components/Excel';
 
   // 3: 导入Vben其他
   import { defHttp } from '/@/utils/http/axios';
   import { useMessage } from '/@/hooks/web/useMessage';
+  import { deepMerge } from '/@/utils';
 
   // 4: 自定义类型
   interface TableConfigToolbar {
@@ -60,23 +69,31 @@
 
   // 6: 最后导出组件
   export default defineComponent({
-    components: { BasicTable, TableTitle, XixiModal },
+    components: { BasicTable, TableTitle, XixiModal, ExpExcelModal },
     setup() {
       // 1: const
       const toolbars: TableConfigToolbar[] = [];
-      const useTableConfig = {
-        toolbars,
-        title: '',
-        helpMessage: '',
-        searchInfo: reactive<Recordable>({}),
-      };
       const { currentRoute } = useRouter();
       const path = currentRoute.value.path;
       //console.log(path);
       const { createMessage } = useMessage();
 
-      const [registerModal, { openModal }] = useModal();
-      const [registerTable, { reload, setColumns, setProps }] = useTable();
+      const [registerModal, { openModal: openModal_Import }] = useModal();
+      const [registerTable, { reload, setColumns, setProps }] = useTable({
+        columns: [
+          {
+            title: '卡号',
+            dataIndex: 'cardnumber',
+            width: 150,
+          },
+          {
+            title: '有效月',
+            dataIndex: 'expiration_month',
+            width: 60,
+          },
+        ],
+      });
+      const [tplConf_ExpExcelModal_register, { openModal: openModal_ExpExcel }] = useModal();
 
       function handleEditEnd({ record, index, key, value }: Recordable) {
         console.log(record, index, key, value);
@@ -125,8 +142,12 @@
           fLoadInfo();
           return;
         }
-        if (data.click === 'openModal') {
-          openModal(true, data);
+        if (data.click === 'openModal_Import') {
+          openModal_Import(true, data);
+          return;
+        }
+        if (data.click === 'openModal_ExpExcel') {
+          openModal_ExpExcel();
           return;
         }
       }
@@ -189,9 +210,11 @@
             return aRet;
           })(),
         );
-        useTableConfig.title = info.title;
-        useTableConfig.helpMessage = info.helpMessage;
-        useTableConfig.toolbars = (() => {
+        //tplConf.TableTitle.title = info.title;
+        for (const k in info.tplConf) {
+          tplConf[k] = deepMerge(tplConf[k], info.tplConf[k]);
+        }
+        tplConf.toolbars = (() => {
           const aRet: any[] = [];
           for (const toolbar of info.toolbars) {
             aRet.push({
@@ -216,14 +239,34 @@
         reload();
       }
 
+      const tplConf = {
+        BasicTable: { searchInfo: reactive<Recordable>({}) },
+        TableTitle: { title: '', helpMessage: '' },
+        toolbars: toolbars,
+        ExpExcelModal: {
+          register: tplConf_ExpExcelModal_register,
+          success: function defaultHeader({ filename, bookType }: ExportModalResult) {
+            // 默认Object.keys(data[0])作为header
+            const data = [];
+            jsonToSheetXlsx({
+              data,
+              filename,
+              write2excelOpts: {
+                bookType,
+              },
+            });
+          },
+        },
+      };
+
       return {
         registerModal,
         registerTable,
         handleEditEnd,
         handleEditCancel,
         beforeEditSubmit,
-        useTableConfig: ref(useTableConfig),
         handleSuccess,
+        tplConf: ref(tplConf),
       };
     },
   });
