@@ -79,20 +79,7 @@
       const { createMessage } = useMessage();
 
       const [registerModal, { openModal: openModal_Import }] = useModal();
-      const [registerTable, { reload, setColumns, setProps }] = useTable({
-        columns: [
-          {
-            title: '卡号',
-            dataIndex: 'cardnumber',
-            width: 150,
-          },
-          {
-            title: '有效月',
-            dataIndex: 'expiration_month',
-            width: 60,
-          },
-        ],
-      });
+      const [registerTable, { reload, setColumns, setProps }] = useTable();
       const [tplConf_ExpExcelModal_register, { openModal: openModal_ExpExcel }] = useModal();
 
       function handleEditEnd({ record, index, key, value }: Recordable) {
@@ -180,36 +167,41 @@
           };
           props.useSearchForm = true;
         }
-        setProps(props);
-        setColumns(
-          (() => {
-            const aRet: BasicColumn[] = [];
-            for (const column of info.columns) {
-              if (column.editComponent === 'InputNumber') {
-                if (0) {
-                  //根据输入的数字显示进度条
-                  column.editRender = ({ text }) => {
-                    return h(Progress, { percent: Number(text) });
-                  };
-                }
-              }
-              if (column.customRender) {
-                const crlist = column.customRender;
-                column.customRender = ({ record }) => {
-                  for (const cr of crlist) {
-                    if (checkRecordByWhere(record, cr.where)) {
-                      const color = cr.color;
-                      const label = record[column.dataIndex];
-                      return h(Tag, { color }, () => label);
-                    }
-                  }
+        const fGetColumns = (columns: any[]) => {
+          const aRet: BasicColumn[] = [];
+          for (const column of columns) {
+            if (column.editComponent === 'InputNumber') {
+              if (0) {
+                //根据输入的数字显示进度条
+                column.editRender = ({ text }) => {
+                  return h(Progress, { percent: Number(text) });
                 };
               }
-              aRet.push(column);
             }
-            return aRet;
-          })(),
-        );
+            if (column.customRender) {
+              const crlist = column.customRender;
+              column.customRender = ({ record }) => {
+                for (const cr of crlist) {
+                  if (checkRecordByWhere(record, cr.where)) {
+                    const color = cr.color;
+                    const label = record[column.dataIndex];
+                    return h(Tag, { color }, () => label);
+                  }
+                }
+              };
+            }
+            aRet.push(column);
+          }
+          return aRet;
+        };
+        const columns = fGetColumns(info.columns);
+        // 修改永久列设置
+        props.columns = columns;
+        setProps(props);
+        if (0) {
+          // 临时修改（重置列的时候会被还原）
+          setColumns(columns);
+        }
         //tplConf.TableTitle.title = info.title;
         for (const k in info.tplConf) {
           tplConf[k] = deepMerge(tplConf[k], info.tplConf[k]);
