@@ -37,7 +37,13 @@
   import { Progress, Tag } from 'ant-design-vue';
 
   // 2: 导入Vben组件
-  import { BasicTable, useTable, BasicColumn, BasicTableProps } from '/@/components/Table';
+  import {
+    BasicTable,
+    useTable,
+    BasicColumn,
+    BasicTableProps,
+    FormSchema,
+  } from '/@/components/Table';
   import TableTitle from '/@/components/Table/src/components/TableTitle.vue';
   import { useModal } from '/@/components/Modal';
   import XixiModal from './XixiModal.vue';
@@ -165,7 +171,7 @@
         for (const k in info.basic_table_props) {
           props[k] = info.basic_table_props[k];
         }
-        if (info.searches) {
+        if (info.basic_table_props.useSearchForm) {
           if (!props.formConfig) {
             // 提供默认的搜索设置
             props.formConfig = {
@@ -173,24 +179,58 @@
               autoSubmitOnEnter: true,
             };
           }
-          props.formConfig.schemas = info.searches;
+          props.formConfig.schemas = ((columns) => {
+            const schemas: FormSchema[] = [];
+            for (const column of columns) {
+              if (column.component) {
+                const schema: FormSchema = {
+                  field: column.dataIndex,
+                  label: column.title,
+                  component: column.component,
+                };
+                if (column.componentProps) {
+                  schema.componentProps = column.componentProps;
+                }
+                schema.colProps = { span: 8 };
+                if (column.colProps) {
+                  schema.colProps = column.colProps;
+                }
+                schemas.push(schema);
+              }
+            }
+            return schemas;
+          })(info.columns);
           props.useSearchForm = true;
         }
         const fGetColumns = (columns: any[]) => {
           // 从接口中返回的“列配置”中，取得列的设置
           const aRet: BasicColumn[] = [];
           for (const column of columns) {
+            if (!column.width) {
+              // 没有宽度的列不显示
+              continue;
+            }
+            const mColumn: BasicColumn = {
+              title: column.title,
+              dataIndex: column.dataIndex,
+            };
+            if (column.width) {
+              mColumn.width = column.width;
+            }
+            if (column.sorter) {
+              mColumn.sorter = column.sorter;
+            }
             if (column.editComponent === 'InputNumber') {
               if (0) {
                 //根据输入的数字显示进度条
-                column.editRender = ({ text }) => {
+                mColumn.editRender = ({ text }) => {
                   return h(Progress, { percent: Number(text) });
                 };
               }
             }
             if (column.customRender) {
               const crlist = column.customRender;
-              column.customRender = ({ record }) => {
+              mColumn.customRender = ({ record }) => {
                 for (const cr of crlist) {
                   if (checkRecordByWhere(record, cr.where)) {
                     const color = cr.color;
@@ -200,7 +240,7 @@
                 }
               };
             }
-            aRet.push(column);
+            aRet.push(mColumn);
           }
           return aRet;
         };
