@@ -70,6 +70,7 @@
       list: (params?: any) => defHttp.get({ url, params }),
       save: (id: number, params: any) => defHttp.post({ url: `${url}/${id}/save`, params }),
       del: (id: number) => defHttp.post({ url: `${url}/${id}/del` }),
+      action: (action: string, params: any) => defHttp.post({ url: `${url}/${action}`, params }),
     };
   };
 
@@ -149,7 +150,26 @@
           openModal_ExpExcel();
           return;
         }
+        if (data.click === 'toolbar_request') {
+          toolbar_request(data);
+          return;
+        }
       }
+      const toolbar_request = async (data: any) => {
+        // 工具栏上面的API
+        const params = {
+          confirm: 0,
+          search: tplConf.LastSearchInfo,
+        };
+        const body = await fTableMgrApi(path).action(data.action, params);
+        if (body.popConfirm) {
+          if (confirm(body.popConfirm.title)) {
+            params.confirm = 1;
+            await fTableMgrApi(path).action(data.action, params);
+            reload();
+          }
+        }
+      };
       const checkRecordByWhere = (record: any, where: any) => {
         for (const k in where) {
           if (record[k] !== where[k]) {
