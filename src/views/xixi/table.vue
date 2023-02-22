@@ -86,7 +86,7 @@
       const { createMessage } = useMessage();
 
       const [registerModal, { openModal: openModal_Import }] = useModal();
-      const [registerTable, { reload, getColumns, setColumns, setProps }] = useTable({
+      const [registerTable, { reload, getColumns, setColumns, setProps, setLoading }] = useTable({
         handleSearchInfoFn(info) {
           console.log('handleSearchInfoFn', info);
           tplConf.LastSearchInfo = info;
@@ -155,17 +155,29 @@
           return;
         }
       }
+
+      function sleep(timeout: number) {
+        return new Promise((resolve) => {
+          setTimeout(resolve, timeout);
+        });
+      }
+
       const toolbar_request = async (data: any) => {
         // 工具栏上面的API
         const params = {
           confirm: 0,
           search: tplConf.LastSearchInfo,
         };
+        setLoading(true);
         const body = await fTableMgrApi(path).action(data.action, params);
+        setLoading(false);
+        await sleep(1);
         if (body.popConfirm) {
           if (confirm(body.popConfirm.title)) {
             params.confirm = 1;
+            setLoading(true);
             await fTableMgrApi(path).action(data.action, params);
+            setLoading(false);
             reload();
           }
         }
